@@ -8,8 +8,7 @@ import '../utils/device_info.dart'
     if (dart.library.js) '../utils/device_info_web.dart';
 import '../utils/websocket.dart'
     if (dart.library.js) '../utils/websocket_web.dart';
-import '../utils/turn.dart'
-    if (dart.library.js) '../utils/turn_web.dart';
+import '../utils/turn.dart' if (dart.library.js) '../utils/turn_web.dart';
 
 enum SignalingState {
   CallStateNew,
@@ -33,15 +32,15 @@ typedef void DataChannelMessageCallback(
 typedef void DataChannelCallback(RTCDataChannel dc);
 
 class Signaling {
-  JsonEncoder _encoder = new JsonEncoder();
-  JsonDecoder _decoder = new JsonDecoder();
+  JsonEncoder _encoder = JsonEncoder();
+  JsonDecoder _decoder = JsonDecoder();
   String _selfId = randomNumeric(6);
   SimpleWebSocket _socket;
   var _sessionId;
   var _host;
   var _port = 8086;
-  var _peerConnections = new Map<String, RTCPeerConnection>();
-  var _dataChannels = new Map<String, RTCDataChannel>();
+  var _peerConnections = Map<String, RTCPeerConnection>();
+  var _dataChannels = Map<String, RTCDataChannel>();
   var _remoteCandidates = [];
   var _turnCredential;
 
@@ -144,7 +143,7 @@ class Signaling {
         {
           List<dynamic> peers = data;
           if (this.onPeersUpdate != null) {
-            Map<String, dynamic> event = new Map<String, dynamic>();
+            Map<String, dynamic> event = Map<String, dynamic>();
             event['self'] = _selfId;
             event['peers'] = peers;
             this.onPeersUpdate(event);
@@ -165,8 +164,8 @@ class Signaling {
 
           var pc = await _createPeerConnection(id, media, false);
           _peerConnections[id] = pc;
-          await pc.setRemoteDescription(new RTCSessionDescription(
-              description['sdp'], description['type']));
+          await pc.setRemoteDescription(
+              RTCSessionDescription(description['sdp'], description['type']));
           await _createAnswer(id, pc, media);
           if (this._remoteCandidates.length > 0) {
             _remoteCandidates.forEach((candidate) async {
@@ -183,8 +182,8 @@ class Signaling {
 
           var pc = _peerConnections[id];
           if (pc != null) {
-            await pc.setRemoteDescription(new RTCSessionDescription(
-                description['sdp'], description['type']));
+            await pc.setRemoteDescription(
+                RTCSessionDescription(description['sdp'], description['type']));
           }
         }
         break;
@@ -193,10 +192,8 @@ class Signaling {
           var id = data['from'];
           var candidateMap = data['candidate'];
           var pc = _peerConnections[id];
-          RTCIceCandidate candidate = new RTCIceCandidate(
-              candidateMap['candidate'],
-              candidateMap['sdpMid'],
-              candidateMap['sdpMLineIndex']);
+          RTCIceCandidate candidate = RTCIceCandidate(candidateMap['candidate'],
+              candidateMap['sdpMid'], candidateMap['sdpMLineIndex']);
           if (pc != null) {
             await pc.addCandidate(candidate);
           } else {
@@ -303,7 +300,7 @@ class Signaling {
 
     _socket.onMessage = (message) {
       print('Recivied data: ' + message);
-      JsonDecoder decoder = new JsonDecoder();
+      JsonDecoder decoder = JsonDecoder();
       this.onMessage(decoder.convert(message));
     };
 
@@ -391,7 +388,7 @@ class Signaling {
   }
 
   _createDataChannel(id, RTCPeerConnection pc, {label: 'fileTransfer'}) async {
-    RTCDataChannelInit dataChannelDict = new RTCDataChannelInit();
+    RTCDataChannelInit dataChannelDict = RTCDataChannelInit();
     RTCDataChannel channel = await pc.createDataChannel(label, dataChannelDict);
     _addDataChannel(id, channel);
   }
@@ -430,7 +427,7 @@ class Signaling {
   }
 
   _send(event, data) {
-    var request = new Map();
+    var request = Map();
     request["type"] = event;
     request["data"] = data;
     _socket.send(_encoder.convert(request));
